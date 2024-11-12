@@ -11,6 +11,4 @@ node_modules/
 /dist
 /build
 
-# Ignore OS-specific files
-.DS_Store
-Thumbs.db
+
