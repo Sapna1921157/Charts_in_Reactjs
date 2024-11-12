@@ -56,12 +56,12 @@ app.get('/api/users', async (req, res) => {
 
 
 // Serve the React frontend build files
-app.use(express.static(path.join(__dirname, '../build', 'build')));
+// app.use(express.static(path.join(__dirname, '../build', 'build')));
 
-// Handle React routing, return index.html for all other routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../build', 'index.html'));
-});
+// // Handle React routing, return index.html for all other routes
+// app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../build', 'index.html'));
+// });
 
 
 // Start the server
