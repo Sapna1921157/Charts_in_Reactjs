@@ -15,13 +15,11 @@
 }
  */
 
-.chart-container {
+/* .chart-container {
   display: flex;
   justify-content: center;
   flex-direction: row;
-  /* Horizontal layout */
   gap: 20px;
-  /* Space between charts */
   width: 100%;
   margin-bottom: 20px;
 }
@@ -29,7 +27,6 @@
 .chart-box {
   flex: 1;
   max-width: 300px;
-  /* Adjust this based on your preferred size */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -53,4 +50,24 @@
   border-radius: 8px;
   margin-top: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+} */
+
+.chart-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.chart-container div {
+  margin-bottom: 20px;
+}
+
+.chart-box {
+  flex: 2;
+  margin-right: 20px;
+}
+
+.data-table-container {
+  flex: 1;
+  padding-left: 20px;
 }

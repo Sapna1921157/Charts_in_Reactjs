@@ -1,232 +1,80 @@
-import React, { useEffect, useState } from 'react';
-import { Pie, Bar, Line} from 'react-chartjs-2';
-import { Chart as ChartJS,ArcElement, BarElement, LineElement, PointElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from 'chart.js';
-import './piechart.css'; // Import CSS
+import React, { useState, useEffect } from 'react';
+import { Pie } from 'react-chartjs-2';
+import axios from 'axios';
 
+function PieChart() {
+  const [chartData, setChartData] = useState({});
+  const [details, setDetails] = useState([]);
+  const [selectedSpecies, setSelectedSpecies] = useState(null);
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement);
-
-const PieChart = () => {
-  const [chartData, setChartData] = useState({ labels: [], datasets: [] });
-  const [selectedData, setSelectedData] = useState(null); // State for detailed data of selected segment
-
+  // Fetch data from the API
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:5001/api/users'); // Replace with your API endpoint
-        const data = await response.json();
-
-        // Process data for the chart
-        const labels = data.map(item => item.species_name);
-        const counts = data.map(item => item.count);
-
+    axios.get('http://localhost:5000/api/species')
+      .then(response => {
+        const speciesData = response.data;
         setChartData({
-          labels: labels,
+          labels: speciesData.map(item => item.species_name),
           datasets: [
             {
-              label: 'Fruit Count',
-              data: counts,
-              backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-              ],
-              borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-              ],
-              borderWidth: 1,
-            },
-          ],
+              label: 'Species Count',
+              data: speciesData.map(item => item.species_count),
+              backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+            }
+          ]
         });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
+      })
+      .catch(error => console.error('Error fetching data:', error));
   }, []);
 
-  // Handle chart segment click
- const handleClick = async (event) => {
-  const { index } = event;
-  const speciesName = chartData.labels[index]; // Get the species name from chart data
-  try {
-    const response = await fetch(`http://localhost:5001/api/species/${encodeURIComponent(speciesName)}`); // Use encodeURIComponent
-    const data = await response.json();
-    if (response.ok) {
-      setSelectedData(data[0]); // Assuming data is an array, take the first item
-    } else {
-      console.error('Error fetching details:', data.message);
+  // Handle click on pie chart segment
+  const handleClick = (event, elements) => {
+    if (elements.length > 0) {
+      const index = elements[0].index;
+      const speciesName = chartData.labels[index];
+      axios.get(`http://localhost:5000/api/species/details?species_name=${speciesName}`)
+        .then(response => {
+          setDetails(response.data); // Set detailed data based on the selected segment
+          setSelectedSpecies(speciesName);
+        })
+        .catch(error => console.error('Error fetching detail data:', error));
     }
-  } catch (error) {
-    console.error('Error fetching details:', error);
-  }
-};
-
-  const options = {
-    plugins: {
-      legend: { position: 'bottom' },
-    },
-    onClick: handleClick,
   };
 
   return (
-    <div className="chart-container">
-      <div className="chart-box">
-        <h2 className="chart-title">Fruit Count Pie Chart</h2>
-        <div className="pie-chart">
-          {chartData ? <Pie data={chartData} options={options} /> : <p>Loading...</p>}
-        </div>
+    <div style={{ display: 'flex' }}>
+      <div style={{ width: '50%' }}>
+        <h3>Species Pie Chart</h3>
+        <Pie
+          data={chartData}
+          options={{
+            responsive: true,
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `${context.label}: ${context.raw}`;
+                  }
+                }
+              }
+            },
+            onClick: handleClick
+          }}
+        />
       </div>
-      <div className="chart-box">
-        <h2 className="chart-title">Fruit Count Bar Chart</h2>
-        <div className="bar-chart">
-          {chartData ? <Bar data={chartData} options={options} /> : <p>Loading...</p>}
-        </div>
-      </div>
-      <div className="chart-box">
-        <h2 className="chart-title">Fruit Count Line Chart</h2>
-        <div className="line-chart">
-          {chartData ? <Line data={chartData} options={options} /> : <p>Loading...</p>}
-        </div>
-      </div>
-      <div className="data-table-container">
-        <h3>Details for Selected Species</h3>
-        {selectedData ? (
+      <div style={{ width: '50%', paddingLeft: '20px' }}>
+        <h3>Details for {selectedSpecies}</h3>
+        {details.length > 0 ? (
           <ul>
-            {selectedData.map((item, index) => (
-              <li key={index}>{item.species_name}: {item.count}</li>
+            {details.map((detail, index) => (
+              <li key={index}>{detail}</li>
             ))}
           </ul>
         ) : (
-          <p>Select a segment to view details</p>
+          <p>Select a section to see details</p>
         )}
       </div>
     </div>
   );
-};
+}
 
-
-
-const BarChart = () => {
-  const [chartData, setChartData] = useState(null);
-
-  useEffect(() => {
-    // Fetch data from an API or another dynamic source
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:5001/api/users'); // Replace with your API endpoint
-        const data = await response.json();
-
-        // Process data for the chart
-        const labels = data.map(item => item.species_name);
-        const counts = data.map(item => item.count);
-
-        setChartData({
-          labels: labels,
-          datasets: [
-            {
-              label: 'Fruit Count',
-              data: counts,
-              backgroundColor: 'rgba(54, 162, 235, 0.5)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1,
-            },
-          ],
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Fruit Count Bar Chart',
-      },
-    },
-  };
-
-  // return (
-  //   <div className="chart-container"> <div className='pie-chart'>
-  //     {chartData ? <Bar data={chartData} options={options} /> : <p>Loading...</p>}
-  //     </div>
-  //   </div>
-  // );
-};
-
-
-const LineChart = () => {
-  const [chartData, setChartData] = useState({ labels: [], datasets: [] });
-
-  useEffect(() => {
-    // Fetch data from an API or another dynamic source
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:5001/api/users'); // Replace with your API endpoint
-        const data = await response.json();
-
-        // Process data for the chart
-        const labels = data.map(item => item.species_name);
-        const counts = data.map(item => item.count);
-
-        setChartData({
-          labels: labels,
-          datasets: [
-            {
-              label: 'Fruit Count Over Time',
-              data: counts,
-              fill: false,
-              backgroundColor: 'rgba(75, 192, 192, 0.5)',
-              borderColor: 'rgba(75, 192, 192, 1)',
-              borderWidth: 2,
-              tension: 0.1, // Smooth the line
-            },
-          ],
-        });
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Fruit Count Line Chart',
-      },
-    },
-  };
-
-  // return (
-  //   <div className="chart-container">
-  //     <h2 className="chart-title">Fruit Count Line Chart</h2> <div className='pie-chart'>
-  //     {chartData.labels.length ? <Line data={chartData} options={options} /> : <p>Loading...</p>}
-  //     </div>
-  //   </div>
-  // );
-};
-
-
-export { PieChart, BarChart, LineChart };
+export default PieChart;
