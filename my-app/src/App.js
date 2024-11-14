@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart } from './piechart/piecharts';
+import PieChart from './piechart/piecharts';
 
 const App = () => {
     return (
